@@ -8,7 +8,9 @@
     return dispatch_get_main_queue();
 }
 RCT_EXPORT_MODULE()
-RCT_EXPORT_METHOD(getBase64String:(NSString*)gif){
+RCT_EXPORT_METHOD(getBase64String:(NSDictionary *)options callback:(RCTResponseSenderBlock)callback)
+{
+    callback("Got this file");
 }
 @end
   
