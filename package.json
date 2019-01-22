@@ -1,14 +1,20 @@
+
 {
-  "name": "react-native-image-to-base64",
-  "version": "0.1.0",
-  "description": "React Native module to get Image's base64 string",
+  "name": "react-native-react-native-gif-base64",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
   "keywords": [
-    "React-Native"
+    "react-native"
   ],
-  "author": "Fumihiro Xue (xfumihiro)",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/xfumihiro/react-native-image-to-base64.git"
+  "author": "",
+  "license": "",
+  "peerDependencies": {
+    "react-native": "^0.41.2",
+    "react-native-windows": "0.41.0-rc.1"
+
   }
 }
