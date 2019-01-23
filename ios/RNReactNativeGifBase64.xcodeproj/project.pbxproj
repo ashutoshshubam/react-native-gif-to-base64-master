@@ -7,6 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		5086FC0121F84B15006AA888 /* YYSpriteSheetImage.m in Sources */ = {isa = PBXBuildFile; fileRef = 5086FBF721F84B15006AA888 /* YYSpriteSheetImage.m */; };
+		5086FC0221F84B15006AA888 /* YYImage.m in Sources */ = {isa = PBXBuildFile; fileRef = 5086FBF921F84B15006AA888 /* YYImage.m */; };
+		5086FC0321F84B15006AA888 /* YYImageCoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 5086FBFA21F84B15006AA888 /* YYImageCoder.m */; };
+		5086FC0421F84B15006AA888 /* YYFrameImage.m in Sources */ = {isa = PBXBuildFile; fileRef = 5086FBFB21F84B15006AA888 /* YYFrameImage.m */; };
+		5086FC0521F84B15006AA888 /* YYAnimatedImageView.m in Sources */ = {isa = PBXBuildFile; fileRef = 5086FBFC21F84B15006AA888 /* YYAnimatedImageView.m */; };
+		5086FC0621F84B15006AA888 /* WebP.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5086FC0021F84B15006AA888 /* WebP.framework */; };
 		B3E7B58A1CC2AC0600A0062D /* RNReactNativeGifBase64.m in Sources */ = {isa = PBXBuildFile; fileRef = B3E7B5891CC2AC0600A0062D /* RNReactNativeGifBase64.m */; };
 /* End PBXBuildFile section */
 
@@ -24,6 +30,19 @@
 
 /* Begin PBXFileReference section */
 		134814201AA4EA6300B7C361 /* libRNReactNativeGifBase64.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libRNReactNativeGifBase64.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		5086FBF221F84B15006AA888 /* LICENSE */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
+		5086FBF421F84B15006AA888 /* YYImage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = YYImage.h; sourceTree = "<group>"; };
+		5086FBF521F84B15006AA888 /* YYImageCoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = YYImageCoder.h; sourceTree = "<group>"; };
+		5086FBF621F84B15006AA888 /* YYFrameImage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = YYFrameImage.h; sourceTree = "<group>"; };
+		5086FBF721F84B15006AA888 /* YYSpriteSheetImage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = YYSpriteSheetImage.m; sourceTree = "<group>"; };
+		5086FBF821F84B15006AA888 /* YYAnimatedImageView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = YYAnimatedImageView.h; sourceTree = "<group>"; };
+		5086FBF921F84B15006AA888 /* YYImage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = YYImage.m; sourceTree = "<group>"; };
+		5086FBFA21F84B15006AA888 /* YYImageCoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = YYImageCoder.m; sourceTree = "<group>"; };
+		5086FBFB21F84B15006AA888 /* YYFrameImage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = YYFrameImage.m; sourceTree = "<group>"; };
+		5086FBFC21F84B15006AA888 /* YYAnimatedImageView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = YYAnimatedImageView.m; sourceTree = "<group>"; };
+		5086FBFD21F84B15006AA888 /* YYSpriteSheetImage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = YYSpriteSheetImage.h; sourceTree = "<group>"; };
+		5086FBFE21F84B15006AA888 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		5086FC0021F84B15006AA888 /* WebP.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = WebP.framework; sourceTree = "<group>"; };
 		B3E7B5881CC2AC0600A0062D /* RNReactNativeGifBase64.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RNReactNativeGifBase64.h; sourceTree = "<group>"; };
 		B3E7B5891CC2AC0600A0062D /* RNReactNativeGifBase64.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RNReactNativeGifBase64.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -33,6 +52,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5086FC0621F84B15006AA888 /* WebP.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -47,9 +67,46 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		5086FBF121F84B15006AA888 /* YYImage */ = {
+			isa = PBXGroup;
+			children = (
+				5086FBF221F84B15006AA888 /* LICENSE */,
+				5086FBF321F84B15006AA888 /* YYImage */,
+				5086FBFE21F84B15006AA888 /* README.md */,
+				5086FBFF21F84B15006AA888 /* Vendor */,
+			);
+			path = YYImage;
+			sourceTree = "<group>";
+		};
+		5086FBF321F84B15006AA888 /* YYImage */ = {
+			isa = PBXGroup;
+			children = (
+				5086FBF421F84B15006AA888 /* YYImage.h */,
+				5086FBF521F84B15006AA888 /* YYImageCoder.h */,
+				5086FBF621F84B15006AA888 /* YYFrameImage.h */,
+				5086FBF721F84B15006AA888 /* YYSpriteSheetImage.m */,
+				5086FBF821F84B15006AA888 /* YYAnimatedImageView.h */,
+				5086FBF921F84B15006AA888 /* YYImage.m */,
+				5086FBFA21F84B15006AA888 /* YYImageCoder.m */,
+				5086FBFB21F84B15006AA888 /* YYFrameImage.m */,
+				5086FBFC21F84B15006AA888 /* YYAnimatedImageView.m */,
+				5086FBFD21F84B15006AA888 /* YYSpriteSheetImage.h */,
+			);
+			path = YYImage;
+			sourceTree = "<group>";
+		};
+		5086FBFF21F84B15006AA888 /* Vendor */ = {
+			isa = PBXGroup;
+			children = (
+				5086FC0021F84B15006AA888 /* WebP.framework */,
+			);
+			path = Vendor;
+			sourceTree = "<group>";
+		};
 		58B511D21A9E6C8500147676 = {
 			isa = PBXGroup;
 			children = (
+				5086FBF121F84B15006AA888 /* YYImage */,
 				B3E7B5881CC2AC0600A0062D /* RNReactNativeGifBase64.h */,
 				B3E7B5891CC2AC0600A0062D /* RNReactNativeGifBase64.m */,
 				134814211AA4EA7D00B7C361 /* Products */,
@@ -112,7 +169,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5086FC0121F84B15006AA888 /* YYSpriteSheetImage.m in Sources */,
+				5086FC0421F84B15006AA888 /* YYFrameImage.m in Sources */,
 				B3E7B58A1CC2AC0600A0062D /* RNReactNativeGifBase64.m in Sources */,
+				5086FC0521F84B15006AA888 /* YYAnimatedImageView.m in Sources */,
+				5086FC0221F84B15006AA888 /* YYImage.m in Sources */,
+				5086FC0321F84B15006AA888 /* YYImageCoder.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -203,8 +265,12 @@
 		58B511F01A9E6C8500147676 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/YYImage/Vendor",
+				);
 				HEADER_SEARCH_PATHS = (
-				"$(inherited)",
+					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
 					"$(SRCROOT)/../../../React/**",
 					"$(SRCROOT)/../../react-native/React/**",
@@ -219,6 +285,10 @@
 		58B511F11A9E6C8500147676 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/YYImage/Vendor",
+				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
