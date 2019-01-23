@@ -14,11 +14,11 @@ RCT_EXPORT_METHOD(getBase64String:(NSDictionary *)options callback:(RCTResponseS
     NSArray *gifArray = [options objectForKey:@"gifArr"];
     NSArray *facesArray = [options objectForKey:@"faceArr"];
 
-    if(gifArray.count > 0 && facesArray>0){
+    if(gifArray.count > 0 && facesArray.count >0){
         NSArray *base64 = [self convertNewGIF:gifArray faces:facesArray];
         callback(base64);
     }else{
-        callback(@"Please send valid paramters");
+        callback(@[@"Please send valid paramters"]);
     }
 }
 
