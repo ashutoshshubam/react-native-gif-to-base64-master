@@ -39,7 +39,10 @@ RCT_EXPORT_METHOD(getBase64String:(NSDictionary *)options callback:(RCTResponseS
         
         NSString *base64 = [self createNewGif:gifdata faceImages:faceImages mapping:mapper ratioValue:ratio];
         
-        [newGIFArr addObject:base64];
+        if (base64 != nil){
+            [newGIFArr addObject:base64];
+        }
+        
     }
     
     return newGIFArr;
@@ -104,7 +107,9 @@ RCT_EXPORT_METHOD(getBase64String:(NSDictionary *)options callback:(RCTResponseS
             });
         }
         
-        [faces addObject:faceImg];
+        if(faceImg != nil){
+            [faces addObject:faceImg];
+        }
     }
     
     return faces;
