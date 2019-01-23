@@ -141,21 +141,24 @@ RCT_EXPORT_METHOD(getBase64String:(NSDictionary *)options callback:(RCTResponseS
             
             int faceNumber = [[data valueForKey:@"face_number"] intValue];
             
-            CGFloat x = [[data valueForKey:@"x"] floatValue];
-            CGFloat y = [[data valueForKey:@"y"] floatValue];
-            
-            CGFloat zoom = [[data valueForKey:@"zoom"] floatValue];
-            CGFloat angle = [[data valueForKey:@"angle"] floatValue];
-            
-            CGFloat newWidth = 400 * ratio * (zoom/100);
-            CGFloat newHeight = 400 * ratio * (zoom/100);
-            
-            x = x - (newWidth / 2);
-            y = y - (newHeight / 2);
-            
-            UIImage *logo = [self imageWithImage:faceImagesArr[faceNumber] convertToSize:CGSizeMake(newWidth, newHeight) rotationAngle:angle];
-            
-            [logo drawInRect:CGRectMake(x, y, newWidth, newHeight)];
+            if (faceImagesArr.count > faceNumber){
+                
+                CGFloat x = [[data valueForKey:@"x"] floatValue];
+                CGFloat y = [[data valueForKey:@"y"] floatValue];
+                
+                CGFloat zoom = [[data valueForKey:@"zoom"] floatValue];
+                CGFloat angle = [[data valueForKey:@"angle"] floatValue];
+                
+                CGFloat newWidth = 400 * ratio * (zoom/100);
+                CGFloat newHeight = 400 * ratio * (zoom/100);
+                
+                x = x - (newWidth / 2);
+                y = y - (newHeight / 2);
+                
+                UIImage *logo = [self imageWithImage:faceImagesArr[faceNumber] convertToSize:CGSizeMake(newWidth, newHeight) rotationAngle:angle];
+                
+                [logo drawInRect:CGRectMake(x, y, newWidth, newHeight)];
+            }
         }
         
         NSTimeInterval timeinterval = [decoder frameDurationAtIndex:i];
