@@ -3,7 +3,7 @@
 
 ## Getting started
 
-`$ npm install react-native-react-native-gif-base64 --save`
+`$ npm install --save https://github.com/rohitpathak88/react-native-gif-to-base64-master`
 
 ### Mostly automatic installation
 
@@ -33,21 +33,22 @@
   	```
       compile project(':react-native-react-native-gif-base64')
   	```
-
-#### Windows
-[Read it! :D](https://github.com/ReactWindows/react-native)
-
-1. In Visual Studio add the `RNReactNativeGifBase64.sln` in `node_modules/react-native-react-native-gif-base64/windows/RNReactNativeGifBase64.sln` folder to their solution, reference from their app.
-2. Open up your `MainPage.cs` app
-  - Add `using React.Native.Gif.Base64.RNReactNativeGifBase64;` to the usings at the top of the file
-  - Add `new RNReactNativeGifBase64Package()` to the `List<IReactPackage>` returned by the `Packages` method
-
-
 ## Usage
 ```javascript
 import RNReactNativeGifBase64 from 'react-native-react-native-gif-base64';
 
-// TODO: What to do with the module?
-RNReactNativeGifBase64;
+    let gifArr = require('./test/data.json');
+    let facesArr = require('./test/faces.json');
+
+    const data =  {
+      'gifArr':gifArr ,
+      'faceArr': facesArr
+    };
+
+    RNReactNativeGifBase64.getBase64String(data, (response) => {
+      // Same code as in above section!
+      console.log(response);
+    });
+    
 ```
   
