@@ -179,13 +179,5 @@ RCT_EXPORT_METHOD(getBase64String:(NSDictionary *)options callback:(RCTResponseS
     return destImage;
 }
 
-#pragma mark - helper methods
-
-- (id)JSONFromFile:(NSString*)fielname
-{
-    NSString *path = [[NSBundle mainBundle] pathForResource:fielname ofType:@"json"];
-    NSData *data = [NSData dataWithContentsOfFile:path];
-    return [NSJSONSerialization JSONObjectWithData:data options:kNilOptions error:nil];
-}
 @end
   

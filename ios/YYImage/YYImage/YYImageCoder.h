@@ -264,7 +264,7 @@ typedef NS_ENUM(NSUInteger, YYImageBlendOperation) {
 
 /**
  Add an image from a file path to encoder.
- @param image    Image file path.
+ @param path    Image file path.
  @param duration Image duration for animation. Pass 0 to ignore this parameter.
  */
 - (void)addImageWithFile:(NSString *)path duration:(NSTimeInterval)duration;
@@ -333,8 +333,9 @@ typedef NS_ENUM(NSUInteger, YYImageBlendOperation) {
  @param completionBlock The block invoked (in main thread) after the save operation completes.
     assetURL: An URL that identifies the saved image file. If the image is not saved, assetURL is nil.
     error: If the image is not saved, an error object that describes the reason for failure, otherwise nil.
- */
+ 
 - (void)yy_saveToAlbumWithCompletionBlock:(nullable void(^)(NSURL * _Nullable assetURL, NSError * _Nullable error))completionBlock;
+*/
 
 /**
  Return a 'best' data representation for this image.
@@ -368,10 +369,10 @@ CG_EXTERN NSString *_Nullable YYImageTypeGetExtension(YYImageType type);
 
 
 /// Returns the shared DeviceRGB color space.
-CG_EXTERN CGColorSpaceRef YYCGColorSpaceGetDeviceRGB();
+CG_EXTERN CGColorSpaceRef YYCGColorSpaceGetDeviceRGB(void);
 
 /// Returns the shared DeviceGray color space.
-CG_EXTERN CGColorSpaceRef YYCGColorSpaceGetDeviceGray();
+CG_EXTERN CGColorSpaceRef YYCGColorSpaceGetDeviceGray(void);
 
 /// Returns whether a color space is DeviceRGB.
 CG_EXTERN BOOL YYCGColorSpaceIsDeviceRGB(CGColorSpaceRef space);
@@ -446,7 +447,7 @@ CG_EXTERN CFDataRef _Nullable YYCGImageCreateEncodedData(CGImageRef imageRef, YY
 /**
  Whether WebP is available in YYImage.
  */
-CG_EXTERN BOOL YYImageWebPAvailable();
+CG_EXTERN BOOL YYImageWebPAvailable(void);
 
 /**
  Get a webp image frame count;
