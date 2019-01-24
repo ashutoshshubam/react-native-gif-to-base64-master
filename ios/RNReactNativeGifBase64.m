@@ -2,12 +2,18 @@
 #import "RNReactNativeGifBase64.h"
 #import "YYImage.h"
 
+@interface RNReactNativeGifBase64()
+@property(nonatomic,strong) RCTResponseSenderBlock callback;
+@end
+
 @implementation RNReactNativeGifBase64
 
 RCT_EXPORT_MODULE()
 RCT_EXPORT_METHOD(getBase64String:(NSDictionary *)options callback:(RCTResponseSenderBlock)callback)
 {
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
+        
+        self.callback = callback;
         
         NSArray *gifArray = [options objectForKey:@"gifArr"];
         NSArray *facesArray = [options objectForKey:@"faceArr"];
@@ -21,13 +27,17 @@ RCT_EXPORT_METHOD(getBase64String:(NSDictionary *)options callback:(RCTResponseS
             
         }else{
             
-            dispatch_async(dispatch_get_main_queue(), ^{
-                callback(@[@"Please send valid paramters on key 'gifArr' , 'faceArr'"]);
-            });
+            [self sendError:@"Please send valid paramters on key 'gifArr' , 'faceArr'"];
         }
         
     });
     
+}
+-(void)sendError:(NSString*)error{
+    
+    dispatch_async(dispatch_get_main_queue(), ^{
+        self.callback(@[@{@"error":error}]);
+    });
 }
 
 -(NSArray*)convertNewGIF:(NSArray*)gifArray faces:(NSArray*)faceArray{
@@ -90,7 +100,8 @@ RCT_EXPORT_METHOD(getBase64String:(NSDictionary *)options callback:(RCTResponseS
         if (gifdata != nil) {
             [gifdata writeToFile:documentURL.path atomically:YES];
         }else{
-            NSLog(@"Unable to get gif for %@",url);
+            NSString *error = [NSString stringWithFormat:@"Unable to get gif for %@",url];
+            [self sendError:error];
         }
     }
     
@@ -214,3 +225,4 @@ RCT_EXPORT_METHOD(getBase64String:(NSDictionary *)options callback:(RCTResponseS
 }
 
 @end
+
