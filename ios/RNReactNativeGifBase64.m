@@ -4,22 +4,30 @@
 
 @implementation RNReactNativeGifBase64
 
-- (dispatch_queue_t)methodQueue
-{
-    return dispatch_get_main_queue();
-}
 RCT_EXPORT_MODULE()
 RCT_EXPORT_METHOD(getBase64String:(NSDictionary *)options callback:(RCTResponseSenderBlock)callback)
 {
-    NSArray *gifArray = [options objectForKey:@"gifArr"];
-    NSArray *facesArray = [options objectForKey:@"faceArr"];
-
-    if(gifArray.count > 0 && facesArray.count >0){
-        NSArray *base64 = [self convertNewGIF:gifArray faces:facesArray];
-        callback(base64);
-    }else{
-        callback(@[@"Please send valid paramters"]);
-    }
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
+        
+        NSArray *gifArray = [options objectForKey:@"gifArr"];
+        NSArray *facesArray = [options objectForKey:@"faceArr"];
+        
+        if(gifArray.count > 0 && facesArray.count >0){
+            NSArray *base64 = [self convertNewGIF:gifArray faces:facesArray];
+            
+            dispatch_async(dispatch_get_main_queue(), ^{
+                callback(base64);
+            });
+            
+        }else{
+            
+            dispatch_async(dispatch_get_main_queue(), ^{
+                callback(@[@"Please send valid paramters on key 'gifArr' , 'faceArr'"]);
+            });
+        }
+        
+    });
+    
 }
 
 -(NSArray*)convertNewGIF:(NSArray*)gifArray faces:(NSArray*)faceArray{
@@ -34,13 +42,23 @@ RCT_EXPORT_METHOD(getBase64String:(NSDictionary *)options callback:(RCTResponseS
         NSData *gifdata = [self downloadGIFfromServer:gifURL withID:gif_id];
         NSArray *faceImages = [self downloadFaceImagesFromServer:faceArray];
         
-        NSArray *mapper = [gifJSON objectForKey:@"maps"];
-        CGFloat ratio = [[gifJSON valueForKey:@"ratio"] floatValue];
-        
-        NSString *base64 = [self createNewGif:gifdata faceImages:faceImages mapping:mapper ratioValue:ratio];
-        
-        if (base64 != nil){
-            [newGIFArr addObject:base64];
+        if (gifdata!=nil && faceImages.count >0){
+            
+            NSArray *mapper = [gifJSON objectForKey:@"maps"];
+            CGFloat ratio = [[gifJSON valueForKey:@"ratio"] floatValue];
+            
+            NSString *base64 = [self createNewGif:gifdata faceImages:faceImages mapping:mapper ratioValue:ratio];
+            
+            if (base64 != nil){
+                [newGIFArr addObject:base64];
+            }else{
+                NSString *error = [NSString stringWithFormat:@"Unable to get create base64 for gif-id %@",gif_id];
+                [newGIFArr addObject:error];
+            }
+            
+        }else{
+            NSString *error = [NSString stringWithFormat:@"Unable to get data for gif-id %@",gif_id];
+            [newGIFArr addObject:error];
         }
         
     }
@@ -58,20 +76,22 @@ RCT_EXPORT_METHOD(getBase64String:(NSDictionary *)options callback:(RCTResponseS
     
     NSData *gifdata;
     
-    NSURL *docuemntURL = [self applicationDocumentsDirectory];
-    docuemntURL = [docuemntURL URLByAppendingPathComponent:gif_id];
+    NSURL *documentURL = [self applicationDocumentsDirectory];
+    documentURL = [documentURL URLByAppendingPathComponent:gif_id];
     
-    if ([[NSFileManager defaultManager]fileExistsAtPath:docuemntURL.path]){
+    if ([[NSFileManager defaultManager]fileExistsAtPath:documentURL.path]){
         
-        gifdata = [NSData dataWithContentsOfURL:docuemntURL];
+        gifdata = [NSData dataWithContentsOfURL:documentURL];
         
     }else{
         
         gifdata = [NSData dataWithContentsOfURL:[NSURL URLWithString:url]];
         
-        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-            [gifdata writeToFile:docuemntURL.path atomically:YES];
-        });
+        if (gifdata != nil) {
+            [gifdata writeToFile:documentURL.path atomically:YES];
+        }else{
+            NSLog(@"Unable to get gif for %@",url);
+        }
     }
     
     return gifdata;
@@ -89,22 +109,25 @@ RCT_EXPORT_METHOD(getBase64String:(NSDictionary *)options callback:(RCTResponseS
         
         NSURL *url = [NSURL URLWithString:urlString];
         
-        NSURL *docuemntURL = [self applicationDocumentsDirectory];
+        NSURL *documentURL = [self applicationDocumentsDirectory];
         
-        docuemntURL = [docuemntURL URLByAppendingPathComponent:urlString];
+        documentURL = [documentURL URLByAppendingPathComponent:urlString];
         
-        if ([[NSFileManager defaultManager]fileExistsAtPath:docuemntURL.path]){
+        if ([[NSFileManager defaultManager]fileExistsAtPath:documentURL.path]){
             
-            faceImg = [UIImage imageWithData:[NSData dataWithContentsOfURL:docuemntURL]];
+            faceImg = [UIImage imageWithData:[NSData dataWithContentsOfURL:documentURL]];
             
         }else{
             
             NSData *imgData = [NSData dataWithContentsOfURL:url];
             
-            faceImg = [UIImage imageWithData:imgData];
-            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-                [imgData writeToFile:docuemntURL.path atomically:YES];
-            });
+            if (imgData != nil) {
+                faceImg = [UIImage imageWithData:imgData];
+                [imgData writeToFile:documentURL.path atomically:YES];
+            }else{
+                NSLog(@"Unable to get image for %@",url);
+            }
+            
         }
         
         if(faceImg != nil){
@@ -191,4 +214,3 @@ RCT_EXPORT_METHOD(getBase64String:(NSDictionary *)options callback:(RCTResponseS
 }
 
 @end
-  
