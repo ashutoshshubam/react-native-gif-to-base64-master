@@ -96,12 +96,9 @@ public class RNReactNativeGifBase64Module extends ReactContextBaseJavaModule {
 
         String strBase64 = createNewGif(new JSONObject(gifDataObj), downloadedGifPath);
 
-        byte[] decodedString = Base64.decode(strBase64, Base64.DEFAULT);
-        Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
-
-
         responseHelper.putString("base64", strBase64);
         responseHelper.invokeResponse(callback);
+        responseHelper.cleanResponse();
 
     }
 

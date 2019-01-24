@@ -1,6 +1,7 @@
 
 buildscript {
     repositories {
+        google()
         jcenter()
     }
 
@@ -12,11 +13,11 @@ buildscript {
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 27
-    buildToolsVersion '27.1.1'
+    compileSdkVersion 28
+    buildToolsVersion '27.0.3'
 
     defaultConfig {
-        minSdkVersion 16
+        minSdkVersion 19
         targetSdkVersion 27
         versionCode 1
         versionName "1.0"
