@@ -18,7 +18,7 @@
 2. Go to `node_modules` ➜ `react-native-react-native-gif-base64` and add `RNReactNativeGifBase64.xcodeproj`
 3. In XCode, in the project navigator, select your project. Add `libRNReactNativeGifBase64.a` to your project's `Build Phases` ➜ `Link Binary With Libraries`
 4. Link Wep.framework from `node_modules` ➜ `react-native-react-native-gif-base64` ➜ `ios` ➜ `YYImage` ➜ `Vendor`
-5. Link Wep.framework in Embedded Binaries also.
+5. Link `Wep.framework` in `General`➜ `Embedded Binaries` also.
 6. Go to `Build Phases` ➜ `Embed Frameworks` Check `Copy only when installing`
 7. Run your project (`Cmd+R`)
 
@@ -36,7 +36,7 @@
   	```
       compile project(':react-native-react-native-gif-base64')
   	```
-## Usage
+## iOS Usage
 ```javascript
 import RNReactNativeGifBase64 from 'react-native-react-native-gif-base64';
 
