@@ -1,12 +1,14 @@
 
 package com.reactlibrary;
 
+import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.Callback;
-import com.facebook.react.modules.core.PermissionListener;
-import com.facebook.react.modules.core.PermissionAwareActivity;
+import com.facebook.react.bridge.ReadableArray;
+import com.facebook.react.bridge.ReadableMap;
+
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -14,29 +16,22 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.Paint;
-import android.media.Image;
-import android.os.Bundle;
+
 import android.os.Environment;
-import android.os.Handler;
-import android.os.StrictMode;
+
 import android.support.annotation.NonNull;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Base64;
 import android.util.Log;
-import android.view.View;
-import android.widget.ImageView;
-import android.widget.TextView;
-import android.widget.Toast;
 
-import com.gif.gifdemo.Utility.Constants;
+import com.facebook.react.bridge.WritableMap;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.ion.Ion;
 import com.waynejo.androidndkgif.GifDecoder;
 import com.waynejo.androidndkgif.GifEncoder;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedInputStream;
@@ -51,29 +46,29 @@ import java.io.OutputStream;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class RNReactNativeGifBase64Module extends ReactContextBaseJavaModule {
 
-  private final ReactApplicationContext reactContext;
+    private final ReactApplicationContext reactContext;
 
     private ArrayList<Bitmap> mFacesBitmapArray = new ArrayList<>();
 
     protected Callback callback;
-    private ReadableMap options;
     private ResponseHelper responseHelper = new ResponseHelper();
 
-  public RNReactNativeGifBase64Module(ReactApplicationContext reactContext) {
-    super(reactContext);
-    this.reactContext = reactContext;
-  }
+    public RNReactNativeGifBase64Module(ReactApplicationContext reactContext) {
+        super(reactContext);
+        this.reactContext = reactContext;
+    }
 
-  @Override
-  public String getName() {
-    return "RNReactNativeGifBase64";
-  }
+    @Override
+    public String getName() {
+        return "RNReactNativeGifBase64";
+    }
 
     @ReactMethod
-    public void getBase64String(final ReadableMap options, final Callback callback) {
+    public void getBase64String(final ReadableMap options, final Callback callback) throws JSONException {
 
         if (options == null)
         {
@@ -82,32 +77,34 @@ public class RNReactNativeGifBase64Module extends ReactContextBaseJavaModule {
         }
 
         this.callback = callback;
-        this.options = options;
 
-        ArrayList<Bitmap> mFacesBitmapArray     =     options.getArray("faceArr");
-        JSONArray mGifArray                     =     options.getArray("gifArr");
+        ArrayList mFacesURLArray     =  options.getArray("faceArr").toArrayList();
+        ArrayList mGifArray         =   options.getArray("gifArr").toArrayList();
 
-        if (mFacesBitmapArray.size() == 0 || mGifArray == null || mGifArray.length() == 0) {
+        if (mFacesURLArray.size() == 0 || mGifArray == null || mGifArray.size() == 0) {
             responseHelper.invokeError(callback, "Invalid Data");
         }
 
-            JSONObject gifDataObj = (JSONObject) mGifArray.opt(0);
+        downloadFaces(mFacesURLArray);
 
-            String url = gifDataObj.optString("url_gif");
-            String gif_id = gifDataObj.optString("giphy_id");
+        HashMap gifDataObj = (HashMap) mGifArray.get(0);
 
-            String downloadedGifPath = downloadGifAndGetPath(url, gif_id);
+        String url = gifDataObj.get("url_gif").toString();
+        String gif_id = gifDataObj.get("giphy_id").toString();
 
-            String strBase64 = createNewGif(gifDataObj, downloadedGifPath);
+        String downloadedGifPath = downloadGifAndGetPath(url, gif_id);
 
-            byte[] decodedString = Base64.decode(strBase64, Base64.DEFAULT);
-            Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+        String strBase64 = createNewGif(new JSONObject(gifDataObj), downloadedGifPath);
+
+        byte[] decodedString = Base64.decode(strBase64, Base64.DEFAULT);
+        Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
 
 
         responseHelper.putString("base64", strBase64);
         responseHelper.invokeResponse(callback);
 
     }
+
 
     private String createNewGif(JSONObject gifDataObj, String downloadedGifPath) {
         try {
@@ -120,13 +117,13 @@ public class RNReactNativeGifBase64Module extends ReactContextBaseJavaModule {
                 JSONArray maps = gifDataObj.optJSONArray("maps");
                 double ratio = gifDataObj.optDouble("ratio");
                 if (maps != null) {
-                    Log.d(TAG, "Maps size: " + maps.length() + " no. of frames in bitmap: " + gifDecoder.frameNum());
 
                     if (maps.length() != gifDecoder.frameNum() || maps.length() == 0) {
-                        Toast.makeText(getApplicationContext(), "Invalid data provided",
-                                Toast.LENGTH_LONG).show();
+                        //TODO:
                     }
+
                     Bitmap overlayedBitmap;
+
                     for (int i = 0; i < gifDecoder.frameNum(); i++) {
                         ArrayList<JSONObject> filteredFrameArray = new ArrayList<>();
                         for (int j = 0; j < maps.length(); j++) {
@@ -137,17 +134,15 @@ public class RNReactNativeGifBase64Module extends ReactContextBaseJavaModule {
                             }
                         }
                         overlayedBitmap = createOverlayBitmapNew(filteredFrameArray, gifDecoder.frame(i), ratio);
-                        if (flag) {
-                            mImageView.setImageBitmap(overlayedBitmap);
-                            flag = false;
-                        }
+
                         gifEncoder.encodeFrame(overlayedBitmap, gifDecoder.delay(i));
                     }
                 }
                 gifEncoder.close();
                 return getBase64StringFromFile(downloadedGifPath);
             }
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             e.printStackTrace();
         }
         return "";
@@ -247,17 +242,16 @@ public class RNReactNativeGifBase64Module extends ReactContextBaseJavaModule {
     }
 
 
-    private void downloadFaces() {
-        initCompleted = true;
-        String[] facesUrl = Constants.faceArray;
-        for (int i = 0; i < facesUrl.length; i++) {
-            downloadFile("FACE-" + i, facesUrl[i]);
+    private void downloadFaces(ArrayList facesUrl) {
+        for (int i = 0; i < facesUrl.size(); i++) {
+            HashMap url = (HashMap)facesUrl.get(i);
+
+            downloadFile("FACE-" + i, url.get("url").toString());
         }
-        Toast.makeText(getApplicationContext(), "Faces download completed", Toast.LENGTH_LONG).show();
     }
 
     private void downloadFile(String fileName, String downloadUrl) {
-        Ion.with(getApplicationContext())
+        Ion.with(this.reactContext)
                 .load(downloadUrl)
                 .write(getFile(fileName))
                 .setCallback(new FutureCallback<File>() {
@@ -267,7 +261,6 @@ public class RNReactNativeGifBase64Module extends ReactContextBaseJavaModule {
                         // do stuff with the File or error
                         String absolutePath = file.getAbsolutePath();
                         mFacesBitmapArray.add(BitmapFactory.decodeFile(absolutePath));
-                        Log.d(TAG, absolutePath);
                     }
                 });
 
@@ -275,7 +268,7 @@ public class RNReactNativeGifBase64Module extends ReactContextBaseJavaModule {
 
     public File getFile(String fileName) {
         if (!isExternalStorageWritable()) return null;
-        if (ContextCompat.checkSelfPermission(this,
+        if (ContextCompat.checkSelfPermission(this.reactContext,
                 Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 != PackageManager.PERMISSION_GRANTED) return null;
 
@@ -291,5 +284,73 @@ public class RNReactNativeGifBase64Module extends ReactContextBaseJavaModule {
     public static boolean isExternalStorageWritable() {
         String state = Environment.getExternalStorageState();
         return Environment.MEDIA_MOUNTED.equals(state);
+    }
+}
+
+class ResponseHelper
+{
+    private WritableMap response = Arguments.createMap();
+
+    public void cleanResponse()
+    {
+        response = Arguments.createMap();
+    }
+
+    public @NonNull
+    WritableMap getResponse()
+    {
+        return response;
+    }
+
+    public void putString(@NonNull final String key,
+                          @NonNull final String value)
+    {
+        response.putString(key, value);
+    }
+
+    public void putInt(@NonNull final String key,
+                       final int value)
+    {
+        response.putInt(key, value);
+    }
+
+    public void putBoolean(@NonNull final String key,
+                           final boolean value)
+    {
+        response.putBoolean(key, value);
+    }
+
+    public void putDouble(@NonNull final String key,
+                          final double value)
+    {
+        response.putDouble(key, value);
+    }
+
+    public void invokeCustomButton(@NonNull final Callback callback,
+                                   @NonNull final String action)
+    {
+        cleanResponse();
+        response.putString("customButton", action);
+        invokeResponse(callback);
+    }
+
+    public void invokeCancel(@NonNull final Callback callback)
+    {
+        cleanResponse();
+        response.putBoolean("didCancel", true);
+        invokeResponse(callback);
+    }
+
+    public void invokeError(@NonNull final Callback callback,
+                            @NonNull final String error)
+    {
+        cleanResponse();
+        response.putString("error", error);
+        invokeResponse(callback);
+    }
+
+    public void invokeResponse(@NonNull final Callback callback)
+    {
+        callback.invoke(response);
     }
 }
