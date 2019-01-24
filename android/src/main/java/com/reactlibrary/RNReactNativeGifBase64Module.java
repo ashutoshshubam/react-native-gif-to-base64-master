@@ -5,10 +5,62 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.Callback;
+import com.facebook.react.modules.core.PermissionListener;
+import com.facebook.react.modules.core.PermissionAwareActivity;
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Matrix;
+import android.graphics.Paint;
+import android.media.Image;
+import android.os.Bundle;
+import android.os.Environment;
+import android.os.Handler;
+import android.os.StrictMode;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AppCompatActivity;
+import android.util.Base64;
+import android.util.Log;
+import android.view.View;
+import android.widget.ImageView;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.gif.gifdemo.Utility.Constants;
+import com.koushikdutta.async.future.FutureCallback;
+import com.koushikdutta.ion.Ion;
+import com.waynejo.androidndkgif.GifDecoder;
+import com.waynejo.androidndkgif.GifEncoder;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.io.BufferedInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.URL;
+import java.net.URLConnection;
+import java.util.ArrayList;
 
 public class RNReactNativeGifBase64Module extends ReactContextBaseJavaModule {
 
   private final ReactApplicationContext reactContext;
+
+    private ArrayList<Bitmap> mFacesBitmapArray = new ArrayList<>();
+
+    protected Callback callback;
+    private ReadableMap options;
+    private ResponseHelper responseHelper = new ResponseHelper();
 
   public RNReactNativeGifBase64Module(ReactApplicationContext reactContext) {
     super(reactContext);
@@ -19,4 +71,225 @@ public class RNReactNativeGifBase64Module extends ReactContextBaseJavaModule {
   public String getName() {
     return "RNReactNativeGifBase64";
   }
+
+    @ReactMethod
+    public void getBase64String(final ReadableMap options, final Callback callback) {
+
+        if (options == null)
+        {
+            responseHelper.invokeError(callback, "Invalid Data");
+            return;
+        }
+
+        this.callback = callback;
+        this.options = options;
+
+        ArrayList<Bitmap> mFacesBitmapArray     =     options.getArray("faceArr");
+        JSONArray mGifArray                     =     options.getArray("gifArr");
+
+        if (mFacesBitmapArray.size() == 0 || mGifArray == null || mGifArray.length() == 0) {
+            responseHelper.invokeError(callback, "Invalid Data");
+        }
+
+            JSONObject gifDataObj = (JSONObject) mGifArray.opt(0);
+
+            String url = gifDataObj.optString("url_gif");
+            String gif_id = gifDataObj.optString("giphy_id");
+
+            String downloadedGifPath = downloadGifAndGetPath(url, gif_id);
+
+            String strBase64 = createNewGif(gifDataObj, downloadedGifPath);
+
+            byte[] decodedString = Base64.decode(strBase64, Base64.DEFAULT);
+            Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+
+
+        responseHelper.putString("base64", strBase64);
+        responseHelper.invokeResponse(callback);
+
+    }
+
+    private String createNewGif(JSONObject gifDataObj, String downloadedGifPath) {
+        try {
+            GifDecoder gifDecoder = new GifDecoder();
+            boolean isSucceeded = gifDecoder.load(downloadedGifPath);
+            if (isSucceeded) {
+                GifEncoder gifEncoder = new GifEncoder();
+                gifEncoder.init(gifDecoder.frame(0).getWidth(),
+                        gifDecoder.frame(0).getHeight(), downloadedGifPath, GifEncoder.EncodingType.ENCODING_TYPE_NORMAL_LOW_MEMORY);
+                JSONArray maps = gifDataObj.optJSONArray("maps");
+                double ratio = gifDataObj.optDouble("ratio");
+                if (maps != null) {
+                    Log.d(TAG, "Maps size: " + maps.length() + " no. of frames in bitmap: " + gifDecoder.frameNum());
+
+                    if (maps.length() != gifDecoder.frameNum() || maps.length() == 0) {
+                        Toast.makeText(getApplicationContext(), "Invalid data provided",
+                                Toast.LENGTH_LONG).show();
+                    }
+                    Bitmap overlayedBitmap;
+                    for (int i = 0; i < gifDecoder.frameNum(); i++) {
+                        ArrayList<JSONObject> filteredFrameArray = new ArrayList<>();
+                        for (int j = 0; j < maps.length(); j++) {
+                            JSONObject mapsFrameObj = (JSONObject) maps.get(j);
+                            int frame_number = mapsFrameObj.optInt("frame_number");
+                            if (frame_number == i) {
+                                filteredFrameArray.add(mapsFrameObj);
+                            }
+                        }
+                        overlayedBitmap = createOverlayBitmapNew(filteredFrameArray, gifDecoder.frame(i), ratio);
+                        if (flag) {
+                            mImageView.setImageBitmap(overlayedBitmap);
+                            flag = false;
+                        }
+                        gifEncoder.encodeFrame(overlayedBitmap, gifDecoder.delay(i));
+                    }
+                }
+                gifEncoder.close();
+                return getBase64StringFromFile(downloadedGifPath);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return "";
+    }
+
+    private Bitmap createOverlayBitmapNew(ArrayList<JSONObject> filteredFrameArray, Bitmap baseBitmap, double ratio) {
+        Bitmap bmOverlay = Bitmap.createBitmap(baseBitmap.getWidth(), baseBitmap.getHeight(), baseBitmap.getConfig());
+        Canvas canvas = new Canvas(bmOverlay);
+        canvas.drawBitmap(baseBitmap, new Matrix(), new Paint(Paint.FILTER_BITMAP_FLAG));
+        for (JSONObject frame : filteredFrameArray) {
+            double x = frame.optDouble("x");
+            double y = frame.optDouble("y");
+            double zoom = frame.optDouble("zoom");
+            double angle = frame.optDouble("angle");
+            double newWidth = 400 * ratio * (zoom / 100);
+            double newHeight = 400 * ratio * (zoom / 100);
+            x = x - (newWidth / 2);
+            y = y - (newHeight / 2);
+
+            int face_number = frame.optInt("face_number");
+
+            // validate face should exist in the faces array
+
+            if(mFacesBitmapArray.size() > face_number ){
+
+                Bitmap faceBitmap = mFacesBitmapArray.get(frame.optInt("face_number"));
+                Matrix matrix = new Matrix();
+                matrix.setRotate((float) angle);
+                Bitmap scaledFaceBitmap = Bitmap.createScaledBitmap(faceBitmap, (int) newWidth, (int) newHeight, true);
+                Bitmap finalFaceBitmap = Bitmap.createBitmap(scaledFaceBitmap, 0, 0, (int) newWidth, (int) newHeight, matrix, true);
+                canvas.drawBitmap(finalFaceBitmap, (float) x, (float) y, new Paint(Paint.FILTER_BITMAP_FLAG));
+
+            }
+
+        }
+        return bmOverlay;
+    }
+
+
+    //    -------------------------------------UTILITY----------------------------------
+
+
+    // Convert Image to Base64
+
+    private String getBase64StringFromFile(String absoluteFilePath) {
+        InputStream inputStream = null;
+        try {
+            inputStream = new FileInputStream(new File(absoluteFilePath));
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        byte[] bytes;
+        byte[] buffer = new byte[8192];
+        int bytesRead;
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        try {
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                output.write(buffer, 0, bytesRead);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        bytes = output.toByteArray();
+        return Base64.encodeToString(bytes, Base64.NO_WRAP);
+    }
+
+    // Download GIF from URL save to directory
+
+    private String downloadGifAndGetPath(String strUrl, String gifName) {
+        URL url;
+        try {
+            url = new URL(strUrl);
+            URLConnection conection = url.openConnection();
+            conection.connect();
+            // download the file
+            InputStream input = new BufferedInputStream(url.openStream());
+            // Output stream
+            OutputStream output;
+            String filePath = Environment
+                    .getExternalStorageDirectory().getAbsolutePath() + "/gifFolder/"
+                    + gifName;
+            output = new FileOutputStream(filePath);
+            byte data[] = new byte[4096];
+            int count;
+            while ((count = input.read(data)) != -1) {
+                output.write(data, 0, count);
+            }
+            output.flush();
+            output.close();
+            input.close();
+            return filePath;
+        } catch (Exception e) {
+            Log.e("Error: ", e.getMessage());
+        }
+        return null;
+    }
+
+
+    private void downloadFaces() {
+        initCompleted = true;
+        String[] facesUrl = Constants.faceArray;
+        for (int i = 0; i < facesUrl.length; i++) {
+            downloadFile("FACE-" + i, facesUrl[i]);
+        }
+        Toast.makeText(getApplicationContext(), "Faces download completed", Toast.LENGTH_LONG).show();
+    }
+
+    private void downloadFile(String fileName, String downloadUrl) {
+        Ion.with(getApplicationContext())
+                .load(downloadUrl)
+                .write(getFile(fileName))
+                .setCallback(new FutureCallback<File>() {
+                    @Override
+                    public void onCompleted(Exception e, File file) {
+                        // download done...
+                        // do stuff with the File or error
+                        String absolutePath = file.getAbsolutePath();
+                        mFacesBitmapArray.add(BitmapFactory.decodeFile(absolutePath));
+                        Log.d(TAG, absolutePath);
+                    }
+                });
+
+    }
+
+    public File getFile(String fileName) {
+        if (!isExternalStorageWritable()) return null;
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) return null;
+
+        File gifFolder = new File(Environment.getExternalStorageDirectory(), "gifFolder");
+        if (!gifFolder.exists()) {
+            if (!gifFolder.mkdir()) {
+                return null;
+            }
+        }
+        return new File(gifFolder, fileName);
+    }
+
+    public static boolean isExternalStorageWritable() {
+        String state = Environment.getExternalStorageState();
+        return Environment.MEDIA_MOUNTED.equals(state);
+    }
 }
