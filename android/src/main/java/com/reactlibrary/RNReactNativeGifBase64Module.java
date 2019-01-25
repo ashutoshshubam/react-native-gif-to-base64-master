@@ -1,6 +1,7 @@
 
 package com.reactlibrary;
 
+import com.facebook.react.ReactActivity;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
@@ -10,6 +11,9 @@ import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 
 import android.Manifest;
+import android.app.Activity;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -17,14 +21,20 @@ import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 
+import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Environment;
 
+import android.provider.Settings;
 import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.util.Base64;
 import android.util.Log;
 
 import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.modules.core.PermissionListener;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.ion.Ion;
 import com.waynejo.androidndkgif.GifDecoder;
@@ -43,6 +53,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
@@ -54,7 +65,11 @@ public class RNReactNativeGifBase64Module extends ReactContextBaseJavaModule {
 
     private ArrayList<Bitmap> mFacesBitmapArray = new ArrayList<>();
 
+    private static final int MY_PERMISSIONS_REQUEST = 1001;
+
     protected Callback callback;
+    private ReadableMap options;
+
     private ResponseHelper responseHelper = new ResponseHelper();
 
     public RNReactNativeGifBase64Module(ReactApplicationContext reactContext) {
@@ -67,8 +82,76 @@ public class RNReactNativeGifBase64Module extends ReactContextBaseJavaModule {
         return "RNReactNativeGifBase64";
     }
 
+
+    private boolean permissionsCheck(@NonNull final Activity activity,
+                                     @NonNull final Callback callback,
+                                     @NonNull final int requestCode)
+    {
+        final int writePermission = ActivityCompat
+                .checkSelfPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+
+        final boolean permissionsGrated = writePermission == PackageManager.PERMISSION_GRANTED ;
+
+        if (!permissionsGrated)
+        {
+            final Boolean dontAskAgain = ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE) && ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.CAMERA);
+
+            if (dontAskAgain)
+            {
+
+                return false;
+            }
+            else
+            {
+                String[] PERMISSIONS = {Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA};
+                if (activity instanceof ReactActivity)
+                {
+                    ((ReactActivity) activity).requestPermissions(PERMISSIONS,MY_PERMISSIONS_REQUEST,listener);
+                }
+
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private PermissionListener listener = new PermissionListener()
+    {
+        public boolean onRequestPermissionsResult(final int requestCode,
+                                                  @NonNull final String[] permissions,
+                                                  @NonNull final int[] grantResults)
+        {
+            boolean permissionsGranted = true;
+            for (int i = 0; i < permissions.length; i++)
+            {
+                final boolean granted = grantResults[i] == PackageManager.PERMISSION_GRANTED;
+                permissionsGranted = permissionsGranted && granted;
+            }
+
+            if (callback == null || options == null)
+            {
+                return false;
+            }
+
+            if (!permissionsGranted)
+            {
+                responseHelper.invokeError(callback, "Permissions weren't granted");
+                return false;
+            }
+
+            switch (requestCode)
+            {
+                case MY_PERMISSIONS_REQUEST:
+                    processGIF(options, callback);
+                    break;
+
+            }
+            return true;
+        }
+    };
+
     @ReactMethod
-    public void getBase64String(final ReadableMap options, final Callback callback) throws JSONException {
+    public void getBase64String(final ReadableMap options, final Callback callback) {
 
         if (options == null)
         {
@@ -77,6 +160,18 @@ public class RNReactNativeGifBase64Module extends ReactContextBaseJavaModule {
         }
 
         this.callback = callback;
+        this.options = options;
+
+        if (!permissionsCheck(getCurrentActivity(), callback, MY_PERMISSIONS_REQUEST))
+        {
+            return;
+        }
+
+        new LongOperation(options ,callback).execute();
+
+    }
+
+    public String processGIF(final ReadableMap options, final Callback callback) {
 
         ArrayList mFacesURLArray     =  options.getArray("faceArr").toArrayList();
         ArrayList mGifArray         =   options.getArray("gifArr").toArrayList();
@@ -96,9 +191,7 @@ public class RNReactNativeGifBase64Module extends ReactContextBaseJavaModule {
 
         String strBase64 = createNewGif(new JSONObject(gifDataObj), downloadedGifPath);
 
-        responseHelper.putString("base64", strBase64);
-        responseHelper.invokeResponse(callback);
-        responseHelper.cleanResponse();
+        return strBase64;
 
     }
 
@@ -181,6 +274,31 @@ public class RNReactNativeGifBase64Module extends ReactContextBaseJavaModule {
 
     //    -------------------------------------UTILITY----------------------------------
 
+    private class LongOperation extends AsyncTask<Void, Void, String> {
+
+        ReadableMap options;
+        Callback callback;
+
+        public LongOperation(ReadableMap options, Callback callback){
+
+            this.options = options;
+            this.callback = callback;
+        };
+
+        protected String doInBackground(Void... params) {
+
+            return processGIF(options,callback);
+
+        }
+
+        protected void onPostExecute(String result) {
+
+            responseHelper.putString("base64", result);
+            responseHelper.invokeResponse(callback);
+            responseHelper.cleanResponse();
+        }
+
+    }
 
     // Convert Image to Base64
 
