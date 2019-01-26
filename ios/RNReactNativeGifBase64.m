@@ -19,10 +19,10 @@ RCT_EXPORT_METHOD(getBase64String:(NSDictionary *)options callback:(RCTResponseS
         NSArray *facesArray = [options objectForKey:@"faceArr"];
         
         if(gifArray.count > 0 && facesArray.count >0){
-            NSArray *base64 = [self convertNewGIF:gifArray faces:facesArray];
+            NSString *base64 = [self convertNewGIF:gifArray faces:facesArray];
             
             dispatch_async(dispatch_get_main_queue(), ^{
-                callback(base64);
+                self.callback(@[@{@"base64":base64}]);
             });
             
         }else{
@@ -40,40 +40,36 @@ RCT_EXPORT_METHOD(getBase64String:(NSDictionary *)options callback:(RCTResponseS
     });
 }
 
--(NSArray*)convertNewGIF:(NSArray*)gifArray faces:(NSArray*)faceArray{
+-(NSString*)convertNewGIF:(NSArray*)gifArray faces:(NSArray*)faceArray{
     
-    NSMutableArray *newGIFArr = [NSMutableArray array];
     
-    for (NSDictionary *gifJSON in gifArray){
+    NSDictionary *gifJSON = gifArray.firstObject;
+    
+    NSString *gifURL = [gifJSON valueForKey:@"url_gif"];
+    NSString *gif_id = [gifJSON valueForKey:@"giphy_id"];
+    
+    NSData *gifdata = [self downloadGIFfromServer:gifURL withID:gif_id];
+    NSArray *faceImages = [self downloadFaceImagesFromServer:faceArray];
+    
+    if (gifdata!=nil && faceImages.count >0){
         
-        NSString *gifURL = [gifJSON valueForKey:@"url_gif"];
-        NSString *gif_id = [gifJSON valueForKey:@"giphy_id"];
+        NSArray *mapper = [gifJSON objectForKey:@"maps"];
+        CGFloat ratio = [[gifJSON valueForKey:@"ratio"] floatValue];
         
-        NSData *gifdata = [self downloadGIFfromServer:gifURL withID:gif_id];
-        NSArray *faceImages = [self downloadFaceImagesFromServer:faceArray];
+        NSString *base64 = [self createNewGif:gifdata faceImages:faceImages mapping:mapper ratioValue:ratio];
         
-        if (gifdata!=nil && faceImages.count >0){
-            
-            NSArray *mapper = [gifJSON objectForKey:@"maps"];
-            CGFloat ratio = [[gifJSON valueForKey:@"ratio"] floatValue];
-            
-            NSString *base64 = [self createNewGif:gifdata faceImages:faceImages mapping:mapper ratioValue:ratio];
-            
-            if (base64 != nil){
-                [newGIFArr addObject:base64];
-            }else{
-                NSString *error = [NSString stringWithFormat:@"Unable to get create base64 for gif-id %@",gif_id];
-                [newGIFArr addObject:error];
-            }
-            
+        if (base64 != nil){
+            return base64;
         }else{
-            NSString *error = [NSString stringWithFormat:@"Unable to get data for gif-id %@",gif_id];
-            [newGIFArr addObject:error];
+            NSString *error = [NSString stringWithFormat:@"Unable to get create base64 for gif-id %@",gif_id];
+            return error;
         }
         
+    }else{
+        NSString *error = [NSString stringWithFormat:@"Unable to get data for gif-id %@",gif_id];
+        return error;
     }
     
-    return newGIFArr;
 }
 
 - (NSURL *)applicationDocumentsDirectory
@@ -225,4 +221,5 @@ RCT_EXPORT_METHOD(getBase64String:(NSDictionary *)options callback:(RCTResponseS
 }
 
 @end
+
 

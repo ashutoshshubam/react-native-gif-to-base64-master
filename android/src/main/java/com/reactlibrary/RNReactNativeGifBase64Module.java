@@ -263,6 +263,10 @@ public class RNReactNativeGifBase64Module extends ReactContextBaseJavaModule {
                 matrix.setRotate((float) angle);
                 Bitmap scaledFaceBitmap = Bitmap.createScaledBitmap(faceBitmap, (int) newWidth, (int) newHeight, true);
                 Bitmap finalFaceBitmap = Bitmap.createBitmap(scaledFaceBitmap, 0, 0, (int) newWidth, (int) newHeight, matrix, true);
+
+                x = x - (finalFaceBitmap.getWidth() / 2);
+                y = y - (finalFaceBitmap.getHeight() / 2);
+
                 canvas.drawBitmap(finalFaceBitmap, (float) x, (float) y, new Paint(Paint.FILTER_BITMAP_FLAG));
 
             }
