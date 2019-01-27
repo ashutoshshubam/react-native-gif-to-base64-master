@@ -229,7 +229,6 @@ public class RNReactNativeGifBase64Module extends ReactContextBaseJavaModule {
                     }
                 }
                 gifEncoder.close();
-                //return getBase64StringFromFile(downloadedGifPath);
                 return downloadedGifPath;
             }
         }
@@ -296,7 +295,9 @@ public class RNReactNativeGifBase64Module extends ReactContextBaseJavaModule {
 
         protected void onPostExecute(String result) {
 
-            responseHelper.putString("base64", result);
+            String base64 = getBase64StringFromFile(result);
+            responseHelper.putString("base64",base64);
+            responseHelper.putString("path", result);
             responseHelper.invokeResponse(callback);
             responseHelper.cleanResponse();
         }
@@ -369,35 +370,17 @@ public class RNReactNativeGifBase64Module extends ReactContextBaseJavaModule {
     }
 
     private void downloadFile(String fileName, String downloadUrl) {
-        Ion.with(this.reactContext)
-                .load(downloadUrl)
-                .write(getFile(fileName))
-                .setCallback(new FutureCallback<File>() {
+
+        Ion.with(this.reactContext).load(downloadUrl).withBitmap().asBitmap()
+                .setCallback(new FutureCallback<Bitmap>() {
                     @Override
-                    public void onCompleted(Exception e, File file) {
-                        // download done...
-                        // do stuff with the File or error
-                        String absolutePath = file.getAbsolutePath();
-                        mFacesBitmapArray.add(BitmapFactory.decodeFile(absolutePath));
+                    public void onCompleted(Exception e, Bitmap result) {
+                        // do something with your bitmap
+                        mFacesBitmapArray.add(result);
                     }
                 });
-
     }
 
-    public File getFile(String fileName) {
-        if (!isExternalStorageWritable()) return null;
-        if (ContextCompat.checkSelfPermission(this.reactContext,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED) return null;
-
-        File gifFolder = new File(Environment.getExternalStorageDirectory(), "gifFolder");
-        if (!gifFolder.exists()) {
-            if (!gifFolder.mkdir()) {
-                return null;
-            }
-        }
-        return new File(gifFolder, fileName);
-    }
 
     public static boolean isExternalStorageWritable() {
         String state = Environment.getExternalStorageState();
