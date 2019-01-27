@@ -63,7 +63,7 @@ public class RNReactNativeGifBase64Module extends ReactContextBaseJavaModule {
 
     private final ReactApplicationContext reactContext;
 
-    private ArrayList<Bitmap> mFacesBitmapArray = new ArrayList<>();
+    private ArrayList<Bitmap> mFacesBitmapArray;
 
     private static final int MY_PERMISSIONS_REQUEST = 1001;
 
@@ -158,6 +158,8 @@ public class RNReactNativeGifBase64Module extends ReactContextBaseJavaModule {
             responseHelper.invokeError(callback, "Invalid Data");
             return;
         }
+
+        mFacesBitmapArray = new ArrayList<>();
 
         this.callback = callback;
         this.options = options;
