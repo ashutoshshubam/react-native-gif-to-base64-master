@@ -189,9 +189,9 @@ public class RNReactNativeGifBase64Module extends ReactContextBaseJavaModule {
 
         String downloadedGifPath = downloadGifAndGetPath(url, gif_id);
 
-        String strBase64 = createNewGif(new JSONObject(gifDataObj), downloadedGifPath);
+        String gif_path = createNewGif(new JSONObject(gifDataObj), downloadedGifPath);
 
-        return strBase64;
+        return gif_path;
 
     }
 
@@ -229,7 +229,8 @@ public class RNReactNativeGifBase64Module extends ReactContextBaseJavaModule {
                     }
                 }
                 gifEncoder.close();
-                return getBase64StringFromFile(downloadedGifPath);
+                //return getBase64StringFromFile(downloadedGifPath);
+                return downloadedGifPath;
             }
         }
         catch (Exception e) {
@@ -249,8 +250,6 @@ public class RNReactNativeGifBase64Module extends ReactContextBaseJavaModule {
             double angle = frame.optDouble("angle");
             double newWidth = 400 * ratio * (zoom / 100);
             double newHeight = 400 * ratio * (zoom / 100);
-            x = x - (newWidth / 2);
-            y = y - (newHeight / 2);
 
             int face_number = frame.optInt("face_number");
 

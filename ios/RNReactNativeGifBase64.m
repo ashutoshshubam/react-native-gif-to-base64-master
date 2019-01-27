@@ -56,7 +56,7 @@ RCT_EXPORT_METHOD(getBase64String:(NSDictionary *)options callback:(RCTResponseS
         NSArray *mapper = [gifJSON objectForKey:@"maps"];
         CGFloat ratio = [[gifJSON valueForKey:@"ratio"] floatValue];
         
-        NSString *base64 = [self createNewGif:gifdata faceImages:faceImages mapping:mapper ratioValue:ratio];
+        NSString *base64 = [self createNewGif:gifdata faceImages:faceImages mapping:mapper ratioValue:ratio gifID:gif_id];
         
         if (base64 != nil){
             return base64;
@@ -145,7 +145,7 @@ RCT_EXPORT_METHOD(getBase64String:(NSDictionary *)options callback:(RCTResponseS
     return faces;
 }
 
--(NSString*)createNewGif:(NSData*)gif_data faceImages:(NSArray*)faceImagesArr mapping:(NSArray*)mapping ratioValue:(CGFloat)ratio{
+-(NSString*)createNewGif:(NSData*)gif_data faceImages:(NSArray*)faceImagesArr mapping:(NSArray*)mapping ratioValue:(CGFloat)ratio gifID:(NSString*)gif_id{
     
     YYImageDecoder *decoder = [YYImageDecoder decoderWithData:gif_data scale:1.0];
     
@@ -203,7 +203,21 @@ RCT_EXPORT_METHOD(getBase64String:(NSDictionary *)options callback:(RCTResponseS
     
     NSData *webpData = [webpEncoder encode];
     
-    return  [webpData base64EncodedStringWithOptions:0];
+    //return  [webpData base64EncodedStringWithOptions:0];
+    
+    NSURL *documentURL = [self applicationDocumentsDirectory];
+    NSString *fileName = [NSString stringWithFormat:@"%@.gif",gif_id];
+    documentURL = [documentURL URLByAppendingPathComponent:fileName];
+    
+    if (webpData != nil) {
+        BOOL saved = [webpData writeToFile:documentURL.path atomically:YES];
+        
+        if (saved){
+            return documentURL.path;
+        }
+    }
+    
+    return @"";
 }
 
 - (UIImage *)imageWithImage:(UIImage *)image convertToSize:(CGSize)size rotationAngle:(CGFloat)degrees {
@@ -219,7 +233,5 @@ RCT_EXPORT_METHOD(getBase64String:(NSDictionary *)options callback:(RCTResponseS
     UIGraphicsEndImageContext();
     return destImage;
 }
-
 @end
-
 
