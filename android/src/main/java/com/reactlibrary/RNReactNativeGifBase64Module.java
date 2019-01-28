@@ -94,7 +94,7 @@ public class RNReactNativeGifBase64Module extends ReactContextBaseJavaModule {
 
         if (!permissionsGrated)
         {
-            final Boolean dontAskAgain = ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE) && ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.CAMERA);
+            final Boolean dontAskAgain = ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE);
 
             if (dontAskAgain)
             {
@@ -103,7 +103,7 @@ public class RNReactNativeGifBase64Module extends ReactContextBaseJavaModule {
             }
             else
             {
-                String[] PERMISSIONS = {Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA};
+                String[] PERMISSIONS = {Manifest.permission.WRITE_EXTERNAL_STORAGE};
                 if (activity instanceof ReactActivity)
                 {
                     ((ReactActivity) activity).requestPermissions(PERMISSIONS,MY_PERMISSIONS_REQUEST,listener);
@@ -142,7 +142,7 @@ public class RNReactNativeGifBase64Module extends ReactContextBaseJavaModule {
             switch (requestCode)
             {
                 case MY_PERMISSIONS_REQUEST:
-                    processGIF(options, callback);
+                    new LongOperation(options ,callback).execute();
                     break;
 
             }
@@ -454,8 +454,6 @@ public class RNReactNativeGifBase64Module extends ReactContextBaseJavaModule {
 
 
            mFacesBitmapArray.add(bmp);
-
-           Log.d("downloaded image", bmp.toString());
 
         }catch(IOException e){
             e.printStackTrace();
