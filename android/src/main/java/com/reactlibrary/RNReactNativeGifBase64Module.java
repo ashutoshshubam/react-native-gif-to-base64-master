@@ -187,7 +187,7 @@ public class RNReactNativeGifBase64Module extends ReactContextBaseJavaModule {
         HashMap gifDataObj = (HashMap) mGifArray.get(0);
 
         String url = gifDataObj.get("url_gif").toString();
-        String gif_id = gifDataObj.get("giphy_id").toString();
+        String gif_id = gifDataObj.get("giphy_id").toString() + ".gif";
 
         String downloadedGifPath = downloadGifAndGetPath(url, gif_id);
 
@@ -334,11 +334,15 @@ public class RNReactNativeGifBase64Module extends ReactContextBaseJavaModule {
     // Download GIF from URL save to directory
 
     private String downloadGifAndGetPath(String strUrl, String gifName) {
-        URL url;
+
         try {
-            url = new URL(strUrl);
-            URLConnection conection = url.openConnection();
-            conection.connect();
+
+            URL url = new URL(strUrl);
+
+            URLConnection connection = url.openConnection();
+
+            connection.connect();
+
             // download the file
             InputStream input = new BufferedInputStream(url.openStream());
             // Output stream
@@ -367,20 +371,62 @@ public class RNReactNativeGifBase64Module extends ReactContextBaseJavaModule {
         for (int i = 0; i < facesUrl.size(); i++) {
             HashMap url = (HashMap)facesUrl.get(i);
 
-            downloadFile("FACE-" + i, url.get("url").toString());
+            downloadFile( url.get("url").toString());
         }
     }
 
-    private void downloadFile(String fileName, String downloadUrl) {
+    private void downloadFile(String downloadUrl) {
 
-        Ion.with(this.reactContext).load(downloadUrl).withBitmap().asBitmap()
-                .setCallback(new FutureCallback<Bitmap>() {
-                    @Override
-                    public void onCompleted(Exception e, Bitmap result) {
-                        // do something with your bitmap
-                        mFacesBitmapArray.add(result);
-                    }
-                });
+        try{
+
+            URL url = new URL(downloadUrl);
+
+            // Initialize a new http url connection
+            URLConnection connection = (URLConnection) url.openConnection();
+
+            // Connect the http url connection
+            connection.connect();
+
+            // Get the input stream from http url connection
+            InputStream inputStream = connection.getInputStream();
+
+                /*
+                    BufferedInputStream
+                        A BufferedInputStream adds functionality to another input stream-namely,
+                        the ability to buffer the input and to support the mark and reset methods.
+                */
+                /*
+                    BufferedInputStream(InputStream in)
+                        Creates a BufferedInputStream and saves its argument,
+                        the input stream in, for later use.
+                */
+            // Initialize a new BufferedInputStream from InputStream
+            BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
+
+                /*
+                    decodeStream
+                        Bitmap decodeStream (InputStream is)
+                            Decode an input stream into a bitmap. If the input stream is null, or
+                            cannot be used to decode a bitmap, the function returns null. The stream's
+                            position will be where ever it was after the encoded data was read.
+
+                        Parameters
+                            is InputStream : The input stream that holds the raw data
+                                              to be decoded into a bitmap.
+                        Returns
+                            Bitmap : The decoded bitmap, or null if the image data could not be decoded.
+                */
+            // Convert BufferedInputStream to Bitmap object
+            Bitmap bmp = BitmapFactory.decodeStream(bufferedInputStream);
+
+
+           mFacesBitmapArray.add(bmp);
+
+           Log.d("downloaded image", bmp.toString());
+
+        }catch(IOException e){
+            e.printStackTrace();
+        }
     }
 
 
