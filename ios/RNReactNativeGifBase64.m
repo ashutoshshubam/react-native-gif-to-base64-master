@@ -61,12 +61,12 @@ RCT_EXPORT_METHOD(getBase64String:(NSDictionary *)options callback:(RCTResponseS
             return result;
         }else{
             NSString *error = [NSString stringWithFormat:@"Unable to get create base64 for gif-id %@",gif_id];
-            return error;
+            return @{@"error":error};
         }
         
     }else{
         NSString *error = [NSString stringWithFormat:@"Unable to get data for gif-id %@",gif_id];
-        return error;
+        return @{@"error":error};
     }
     
 }
@@ -116,27 +116,14 @@ RCT_EXPORT_METHOD(getBase64String:(NSDictionary *)options callback:(RCTResponseS
         
         NSURL *url = [NSURL URLWithString:urlString];
         
-//        NSURL *documentURL = [self applicationDocumentsDirectory];
-//
-//        documentURL = [documentURL URLByAppendingPathComponent:urlString];
-//
-//        if ([[NSFileManager defaultManager]fileExistsAtPath:documentURL.path]){
-//
-//            faceImg = [UIImage imageWithData:[NSData dataWithContentsOfURL:documentURL]];
-//
-//        }else{
         
-            NSData *imgData = [NSData dataWithContentsOfURL:url];
-            
-            if (imgData != nil) {
-                faceImg = [UIImage imageWithData:imgData];
-//              BOOL imgSaved = [imgData writeToFile:documentURL.path atomically:YES];
-//                NSLog(@"Saved %d",imgSaved);
-            }else{
-                NSLog(@"Unable to get image for %@",url);
-            }
-            
-        //}
+        NSData *imgData = [NSData dataWithContentsOfURL:url];
+        
+        if (imgData != nil) {
+            faceImg = [UIImage imageWithData:imgData];
+        }else{
+            NSLog(@"Unable to get image for %@",url);
+        }
         
         if(faceImg != nil){
             [faces addObject:faceImg];
@@ -156,9 +143,11 @@ RCT_EXPORT_METHOD(getBase64String:(NSDictionary *)options callback:(RCTResponseS
     
     YYImageEncoder *webpEncoder = [[YYImageEncoder alloc] initWithType:YYImageTypeWebP];
     webpEncoder.loopCount = 0;
-    //webpEncoder.quality = 1.0;
+    //    webpEncoder.quality = 1.0;
     
-    for(int i=0; i<mapping.count; i++){
+    NSNumber *maxNumber = [mapping valueForKeyPath:@"@max.frame_number"];
+    
+    for(int i=0; i<maxNumber.intValue; i++){
         
         UIImage *_originalImage = [decoder frameAtIndex:i decodeForDisplay:NO].image;
         
@@ -218,7 +207,7 @@ RCT_EXPORT_METHOD(getBase64String:(NSDictionary *)options callback:(RCTResponseS
         }
     }
     
-    return @{};
+    return @{@"error":@"Error"};
 }
 
 - (UIImage *)imageWithImage:(UIImage *)image convertToSize:(CGSize)size rotationAngle:(CGFloat)degrees {
@@ -235,3 +224,4 @@ RCT_EXPORT_METHOD(getBase64String:(NSDictionary *)options callback:(RCTResponseS
     return destImage;
 }
 @end
+

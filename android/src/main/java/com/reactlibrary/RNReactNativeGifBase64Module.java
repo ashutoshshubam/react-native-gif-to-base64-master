@@ -210,21 +210,14 @@ public class RNReactNativeGifBase64Module extends ReactContextBaseJavaModule {
                 double ratio = gifDataObj.optDouble("ratio");
                 if (maps != null) {
 
-                    if (maps.length() != gifDecoder.frameNum() || maps.length() == 0) {
-                        //TODO:
-                    }
-
                     Bitmap overlayedBitmap;
 
-                    for (int i = 0; i < gifDecoder.frameNum(); i++) {
-                        ArrayList<JSONObject> filteredFrameArray = new ArrayList<>();
-                        for (int j = 0; j < maps.length(); j++) {
-                            JSONObject mapsFrameObj = (JSONObject) maps.get(j);
-                            int frame_number = mapsFrameObj.optInt("frame_number");
-                            if (frame_number == i) {
-                                filteredFrameArray.add(mapsFrameObj);
-                            }
-                        }
+                    int maxFrameNumber = getMaxValue(maps,"frame_number");
+
+                    for (int i = 0; i < maxFrameNumber; i++) {
+
+                        ArrayList<JSONObject> filteredFrameArray = getAllJsonForFrames(maps,i);
+
                         overlayedBitmap = createOverlayBitmapNew(filteredFrameArray, gifDecoder.frame(i), ratio);
 
                         gifEncoder.encodeFrame(overlayedBitmap, gifDecoder.delay(i));
@@ -277,6 +270,46 @@ public class RNReactNativeGifBase64Module extends ReactContextBaseJavaModule {
 
 
     //    -------------------------------------UTILITY----------------------------------
+
+    private Integer getMaxValue(JSONArray array,String key){
+
+        int max = 0;
+
+        try {
+            for (int j = 0; j < array.length(); j++) {
+                JSONObject mapsFrameObj = (JSONObject) array.get(j);
+                int frame_number = mapsFrameObj.optInt(key);
+
+                if (frame_number > max){
+                    max = frame_number;
+                }
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+
+        return max;
+    }
+
+    private ArrayList<JSONObject> getAllJsonForFrames(JSONArray maps,Integer frameNo){
+
+        ArrayList<JSONObject> filteredFrameArray = new ArrayList<>();
+
+        try {
+            for (int j = 0; j < maps.length(); j++) {
+                JSONObject mapsFrameObj = (JSONObject) maps.get(j);
+                int frame_number = mapsFrameObj.optInt("frame_number");
+                if (frame_number == frameNo) {
+                    filteredFrameArray.add(mapsFrameObj);
+                }
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+
+        return filteredFrameArray;
+    }
+
 
     private class LongOperation extends AsyncTask<Void, Void, String> {
 
